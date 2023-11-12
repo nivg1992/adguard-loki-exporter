@@ -26,7 +26,7 @@ class LokiApi {
         });
         
         if(res.status === 204) {
-            logger.info(`Write ${logs.length} to the loki successfully`);
+            logger.debug(`Write ${logs.length} to the loki successfully`);
         }
     }
 }
