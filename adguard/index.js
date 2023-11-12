@@ -1,5 +1,6 @@
 const axois = require('axios');
 const fs = require('fs');
+const logger = require('../logger');
 
 function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
@@ -15,11 +16,6 @@ class AdguardApi {
         if(!fs.existsSync(pointerFilePath)) {
             fs.writeFileSync(this.pointerFilePath, "");
         }
-    }
-
-    createDefaultPointerFile() {
-        console.log('default pointer file not exist');
-        fs.writeFileSync(this.pointerFilePath, new Date().toISOString());
     }
 
     async getLogs(callback) {

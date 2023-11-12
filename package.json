@@ -5,6 +5,10 @@
   "repository": "git@github.com:nivg1992/adguard-loki-exporter.git",
   "author": "Niv Gabay <nivg1992@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "yarn",
+    "start": "node ./index.js"
+  },
   "dependencies": {
     "axios": "^1.6.1",
     "commander": "^11.1.0",
