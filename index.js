@@ -9,10 +9,10 @@ const LokiApi = require('./loki/index');
 logger.info('--------  boot --------')
 
 program
-  .option('-aurl, --adguard-url <char>', 'Adguard URL', process.env.ADGUARD_URL)
+  .option('-aurl, --adguard-url <char>', 'Adguard URL (http://127.0.0.1:8080)', process.env.ADGUARD_URL)
   .option('-auser, --adguard-user <char>', 'Adguard user', process.env.ADGUARD_USER)
   .option('-apass, --adguard-password <char>', 'Adguard password', process.env.ADGUARD_PASSWORD)
-  .option('-lurl --loki-url <char>', 'Loki', process.env.LOKI_URL)
+  .option('-lurl --loki-url <char>', 'Loki url (http://127.0.0.1:3100)', process.env.LOKI_URL)
   .option('-cron --cron-schedule <char>', 'Corn Job schedule', process.env.CRON_SCHEDULE || '* * * * *');
 
 program.parse();
@@ -38,6 +38,17 @@ function flattenObject(ob) {
     }
     return toReturn;
 }
+
+if(!options.adguardUrl) {
+    logger.error(`adguard url doesn't set use -aurl or ADGUARD_URL env`)
+    return;
+}
+
+if(!options.lokiUrl) {
+    logger.error(`loki url doesn't set use -lurl or LOKI_URL env`)
+    return;
+}
+
 
 const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword);
 const lokiApi = new LokiApi(options.lokiUrl);
