@@ -4,10 +4,9 @@ const moment = require("moment-timezone");
 const logger = require('../logger');
 
 class LokiApi {
-    constructor(url, user, pass) {
+    constructor(url, tz) {
         this.url = url;
-        this.user = user;
-        this.pass = pass;
+        this.tz = tz;
     }
 
     async push(logs) {
@@ -18,7 +17,7 @@ class LokiApi {
                         process: "adguard"
                     },
                     values: logs.map((log) => {
-                        const unixTimestampNanoseconds = moment.utc(log.time).tz("Asia/Jerusalem").valueOf() * 1e6;
+                        const unixTimestampNanoseconds = moment.utc(log.time).tz(this.tz).valueOf() * 1e6;
                         return [unixTimestampNanoseconds.toString(), logfmt.stringify(log)]
                     })
                 }

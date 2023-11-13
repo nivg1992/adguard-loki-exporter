@@ -13,6 +13,7 @@ program
   .option('-auser, --adguard-user <char>', 'Adguard user', process.env.ADGUARD_USER)
   .option('-apass, --adguard-password <char>', 'Adguard password', process.env.ADGUARD_PASSWORD)
   .option('-lurl --loki-url <char>', 'Loki url (http://127.0.0.1:3100)', process.env.LOKI_URL)
+  .option('-tz --timezone <char>', 'Set timezone for message to loki', process.env.TIMEZONE)
   .option('-cron --cron-schedule <char>', 'Corn Job schedule', process.env.CRON_SCHEDULE || '* * * * *');
 
 program.parse();
@@ -51,7 +52,7 @@ if(!options.lokiUrl) {
 
 
 const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword);
-const lokiApi = new LokiApi(options.lokiUrl);
+const lokiApi = new LokiApi(options.lokiUrl, options.timezone);
 
 const syncLogs = () => {
     adguardApi.getLogs(async (logs) => {
