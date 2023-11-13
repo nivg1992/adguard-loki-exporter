@@ -92,4 +92,3 @@ syncLogs();
 cron.schedule(options.cronSchedule, () => {
     syncLogs();
 });
-
