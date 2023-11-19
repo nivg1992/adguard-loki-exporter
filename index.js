@@ -6,7 +6,8 @@ const AdguardApi = require('./adguard/index');
 const LokiApi = require('./loki/index');
 
 
-logger.info('--------  boot --------')
+logger.info('--------  boot --------');
+logger.info(`log level: ${process.env.LOG_LEVEL}`);
 
 program
   .option('-aurl, --adguard-url <char>', 'Adguard URL (http://127.0.0.1:8080)', process.env.ADGUARD_URL)
