@@ -37,6 +37,8 @@ class AdguardApi {
                 if(lastLogDate === "") {
                     lastLogDate = currentLastLogDate
                 }
+                logger.debug(`olderThan: ${olderThan}`);
+                logger.debug(`logs count: ${logs.length}`);
                 olderThan = res.data.oldest;
             }
 
