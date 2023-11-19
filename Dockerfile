@@ -12,5 +12,5 @@ RUN yarn
 # Bundle app source
 COPY . .
 
-CMD [ "node", "index.js" ]
+CMD [ "node", "--max-old-space-size=4096" ,"index.js" ]
 
