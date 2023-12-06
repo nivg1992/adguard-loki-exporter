@@ -58,6 +58,7 @@ class AdguardApi {
                     const chunk = logs.slice(i, i + CHUNK_SIZE);
                     if(await callback(chunk)) {
                         const last = chunk.slice(-1);
+                        logger.debug(last);
                         fs.writeFileSync(this.pointerFilePath, last.time);
                     } else {
                         throw new Error('callback failed');
