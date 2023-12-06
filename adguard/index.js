@@ -43,6 +43,11 @@ class AdguardApi {
                 }
                 logger.debug(`olderThan: ${olderThan}`);
                 logger.debug(`logs count: ${logs.length}`);
+                
+                if(res.data.oldest === "") {
+                    break;
+                }
+                
                 olderThan = res.data.oldest;
                 pageCount++;
             }
@@ -57,9 +62,6 @@ class AdguardApi {
                     } else {
                         throw new Error('callback failed');
                     }
-                }
-                if(await callback(logs)) {
-                    fs.writeFileSync(this.pointerFilePath, logs[0].time);
                 }
             }
         } catch(error) {
