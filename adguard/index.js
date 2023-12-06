@@ -1,7 +1,8 @@
 const axois = require('axios');
 const fs = require('fs');
 const logger = require('../logger');
-const MAX_PAGES = 100;
+const MAX_PAGES = 5000;
+const CHUNK_SIZE = 5000;
 
 function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
@@ -46,6 +47,16 @@ class AdguardApi {
             }
 
             if(logs.length > 0) {
+                logs.reverse();
+                for (let i = 0; i < logs.length; i += CHUNK_SIZE) {
+                    const chunk = logs.slice(i, i + CHUNK_SIZE);
+                    if(await callback(logs)) {
+                        const last = chunk.slice(-1);
+                        fs.writeFileSync(this.pointerFilePath, last.time);
+                    } else {
+                        throw new Error('callback failed');
+                    }
+                }
                 if(await callback(logs)) {
                     fs.writeFileSync(this.pointerFilePath, logs[0].time);
                 }
