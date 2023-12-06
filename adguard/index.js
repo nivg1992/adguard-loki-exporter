@@ -57,7 +57,7 @@ class AdguardApi {
                 for (let i = 0; i < logs.length; i += CHUNK_SIZE) {
                     const chunk = logs.slice(i, i + CHUNK_SIZE);
                     if(await callback(chunk)) {
-                        const last = chunk.slice(-1);
+                        const last = chunk.slice(-1)[0];
                         logger.debug(last);
                         fs.writeFileSync(this.pointerFilePath, last.time);
                     } else {
