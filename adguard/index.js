@@ -1,7 +1,7 @@
 const axois = require('axios');
 const fs = require('fs');
 const logger = require('../logger');
-const MAX_PAGES = 5000;
+const MAX_PAGES = 1000;
 const CHUNK_SIZE = 5000;
 
 function isValidDate(d) {
