@@ -1,6 +1,7 @@
 const axois = require('axios');
 const fs = require('fs');
 const logger = require('../logger');
+const MAX_PAGES = 100;
 
 function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
@@ -24,7 +25,8 @@ class AdguardApi {
             let lastLogDate = fs.readFileSync(this.pointerFilePath).toString().trim();
             let olderThan;
             const logs = [];
-            while(currentLastLogDate !== lastLogDate) {
+            let pageCount = 0;
+            while(currentLastLogDate !== lastLogDate && pageCount !== MAX_PAGES) {
                 const res = await axois.get(`${this.url}/control/querylog?${olderThan ? `older_than=${olderThan}` : ""}`, {auth: { username:this.user, password: this.pass}});
                 for(const log of res.data.data) {
                     currentLastLogDate = log.time
@@ -40,6 +42,7 @@ class AdguardApi {
                 logger.debug(`olderThan: ${olderThan}`);
                 logger.debug(`logs count: ${logs.length}`);
                 olderThan = res.data.oldest;
+                pageCount++;
             }
 
             if(logs.length > 0) {
