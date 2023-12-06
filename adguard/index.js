@@ -28,6 +28,7 @@ class AdguardApi {
             const logs = [];
             let pageCount = 0;
             while(currentLastLogDate !== lastLogDate && pageCount !== MAX_PAGES) {
+                logger.debug(`Page: ${pageCount}`);
                 const res = await axois.get(`${this.url}/control/querylog?${olderThan ? `older_than=${olderThan}` : ""}`, {auth: { username:this.user, password: this.pass}});
                 for(const log of res.data.data) {
                     currentLastLogDate = log.time
