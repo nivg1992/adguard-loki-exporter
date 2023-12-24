@@ -9,7 +9,7 @@ function isValidDate(d) {
 }
 
 class AdguardApi {
-    constructor(url, user, pass, pointerFilePath = './pointer-adguard') {
+    constructor(url, user, pass, pointerFilePath = './pointer/pointer-adguard') {
         this.url = url;
         this.user = user;
         this.pass = pass;
