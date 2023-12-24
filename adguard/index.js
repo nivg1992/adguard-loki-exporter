@@ -81,7 +81,10 @@ class AdguardApi {
                 logger.error(error.request);
               } else {
                 // Something happened in setting up the request that triggered an Error
-                logger.error('Error', error.message, error.stack);
+                logger.error('Error');
+                logger.error(error.message)
+                logger.error(error.stack)
+                
               }
         }
     }
