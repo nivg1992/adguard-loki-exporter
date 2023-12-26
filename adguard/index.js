@@ -1,13 +1,15 @@
 const axois = require('axios');
 const fs = require('fs');
 const logger = require('../logger');
+const MAX_PAGES = 1000;
+const CHUNK_SIZE = 500;
 
 function isValidDate(d) {
     return d instanceof Date && !isNaN(d);
 }
 
 class AdguardApi {
-    constructor(url, user, pass, pointerFilePath = './pointer-adguard') {
+    constructor(url, user, pass, pointerFilePath = './pointer/pointer-adguard') {
         this.url = url;
         this.user = user;
         this.pass = pass;
@@ -24,7 +26,9 @@ class AdguardApi {
             let lastLogDate = fs.readFileSync(this.pointerFilePath).toString().trim();
             let olderThan;
             const logs = [];
-            while(currentLastLogDate !== lastLogDate) {
+            let pageCount = 0;
+            while(currentLastLogDate !== lastLogDate && pageCount !== MAX_PAGES) {
+                logger.debug(`Page: ${pageCount}`);
                 const res = await axois.get(`${this.url}/control/querylog?${olderThan ? `older_than=${olderThan}` : ""}`, {auth: { username:this.user, password: this.pass}});
                 for(const log of res.data.data) {
                     currentLastLogDate = log.time
@@ -37,18 +41,35 @@ class AdguardApi {
                 if(lastLogDate === "") {
                     lastLogDate = currentLastLogDate
                 }
+                logger.debug(`olderThan: ${olderThan}`);
+                logger.debug(`logs count: ${logs.length}`);
+                
+                if(res.data.oldest === "") {
+                    break;
+                }
+                
                 olderThan = res.data.oldest;
+                pageCount++;
             }
 
             if(logs.length > 0) {
-                if(await callback(logs)) {
-                    fs.writeFileSync(this.pointerFilePath, logs[0].time);
+                logs.reverse();
+                for (let i = 0; i < logs.length; i += CHUNK_SIZE) {
+                    const chunk = logs.slice(i, i + CHUNK_SIZE);
+                    if(await callback(chunk)) {
+                        const last = chunk.slice(-1)[0];
+                        logger.debug(last);
+                        fs.writeFileSync(this.pointerFilePath, last.time);
+                    } else {
+                        throw new Error('callback failed');
+                    }
                 }
             }
         } catch(error) {
             if (error.response) {
                 // The request was made and the server responded with a status code
                 // that falls out of the range of 2xx
+                logger.error('Error Response');
                 logger.error(error.response.data);
                 logger.error(error.response.status);
                 logger.error(error.response.headers);
@@ -56,10 +77,14 @@ class AdguardApi {
                 // The request was made but no response was received
                 // `error.request` is an instance of XMLHttpRequest in the browser 
                 // and an instance of http.ClientRequest in node.js
+                logger.error('Error request');
                 logger.error(error.request);
               } else {
                 // Something happened in setting up the request that triggered an Error
-                logger.error('Error', error.message);
+                logger.error('Error');
+                logger.error(error.message)
+                logger.error(error.stack)
+                
               }
         }
     }

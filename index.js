@@ -6,7 +6,8 @@ const AdguardApi = require('./adguard/index');
 const LokiApi = require('./loki/index');
 
 
-logger.info('--------  boot --------')
+logger.info('--------  boot --------');
+logger.info(`log level: ${process.env.LOG_LEVEL}`);
 
 program
   .option('-aurl, --adguard-url <char>', 'Adguard URL (http://127.0.0.1:8080)', process.env.ADGUARD_URL)
@@ -53,9 +54,15 @@ if(!options.lokiUrl) {
 
 const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword);
 const lokiApi = new LokiApi(options.lokiUrl, options.timezone);
+let lock = false;
 
-const syncLogs = () => {
-    adguardApi.getLogs(async (logs) => {
+const syncLogs = async () => {
+    if(lock) {
+        return;
+    }
+  
+    lock = true;
+    await adguardApi.getLogs(async (logs) => {
         const logsFlatten = logs.map((log) => {
             if(log.answer && log.answer.length > 0) {
                 log.answer.filter((ans) => ans.type === 'A').map((ans,index) => {
@@ -85,6 +92,7 @@ const syncLogs = () => {
         await lokiApi.push(logsFlatten);
         return true;
     });
+    lock = false;
 }
 
 syncLogs();
