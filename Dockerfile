@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+RUN npm i -g pnpm
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -7,7 +9,7 @@ WORKDIR /usr/src/app
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package.json yarn.lock ./
 
-RUN yarn
+RUN pnpm install
 
 # Bundle app source
 COPY . .
