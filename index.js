@@ -3,7 +3,8 @@ const { program } = require('commander');
 const geoip = require('geoip-lite');
 const logger = require('./logger');
 const AdguardApi = require('./adguard/index');
-const LokiApi = require('./loki/index');
+const LokiApi = require('./outputs/loki');
+const HttpApi = require('./outputs/http');
 
 
 logger.info('--------  boot --------');
@@ -14,6 +15,7 @@ program
   .option('-auser, --adguard-user <char>', 'Adguard user', process.env.ADGUARD_USER)
   .option('-apass, --adguard-password <char>', 'Adguard password', process.env.ADGUARD_PASSWORD)
   .option('-lurl --loki-url <char>', 'Loki url (http://127.0.0.1:3100)', process.env.LOKI_URL)
+  .option('-hurl --http-url <char>', 'http url (http://127.0.0.1:12203)', process.env.HTTP_URL)
   .option('-tz --timezone <char>', 'Set timezone for message to loki', process.env.TIMEZONE)
   .option('-cron --cron-schedule <char>', 'Corn Job schedule', process.env.CRON_SCHEDULE || '* * * * *');
 
@@ -46,15 +48,49 @@ if(!options.adguardUrl) {
     return;
 }
 
-if(!options.lokiUrl) {
-    logger.error(`loki url doesn't set use -lurl or LOKI_URL env`)
+if(!options.lokiUrl && !options.httpUrl) {
+    logger.error(`loki/http url doesn't set use -lurl/-ourl or LOKI_URL/HTTP_URL env`)
+    return;
+}
+
+if(options.lokiUrl && options.httpUrl) {
+    logger.error(`is able to use only one output http-url or loki-url`)
     return;
 }
 
 
 const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword);
 const lokiApi = new LokiApi(options.lokiUrl, options.timezone);
+const httpApi = new HttpApi(options.httpUrl);
 let lock = false;
+
+const LogsEnrich = async (logs) => {
+    return logs.map((log) => {
+        if(log.answer && log.answer.length > 0) {
+            log.answer.filter((ans) => ans.type === 'A').map((ans,index) => {
+                ans.geo = geoip.lookup(ans.value);
+
+                if(index === 0) {
+                    log.geo = ans.geo;
+                }
+            });
+
+            log.answer = log.answer.map(ans => `${ans.type}&${ans.value}&${ans.geo ? ans.geo.country : ""}&${ans.ttl}`).join(',');            
+        }
+
+        if(log.original_answer && log.original_answer.length > 0) {
+            log.original_answer.filter((ans) => ans.type === 'A').map((ans) => {
+                ans.geo = geoip.lookup(ans.value);
+            });
+
+            log.original_answer = log.original_answer.map(ans => `${ans.type}&${ans.value}&${ans.geo ? ans.geo.country : ""}&${ans.ttl}`).join(',');
+        }
+        
+        return {
+            ...flattenObject(log),
+        }
+    });
+}
 
 const syncLogs = async () => {
     if(lock) {
@@ -63,33 +99,12 @@ const syncLogs = async () => {
   
     lock = true;
     await adguardApi.getLogs(async (logs) => {
-        const logsFlatten = logs.map((log) => {
-            if(log.answer && log.answer.length > 0) {
-                log.answer.filter((ans) => ans.type === 'A').map((ans,index) => {
-                    ans.geo = geoip.lookup(ans.value);
-    
-                    if(index === 0) {
-                        log.geo = ans.geo;
-                    }
-                });
-    
-                log.answer = log.answer.map(ans => `${ans.type}&${ans.value}&${ans.geo ? ans.geo.country : ""}&${ans.ttl}`).join(',');            
-            }
-    
-            if(log.original_answer && log.original_answer.length > 0) {
-                log.original_answer.filter((ans) => ans.type === 'A').map((ans) => {
-                    ans.geo = geoip.lookup(ans.value);
-                });
-    
-                log.original_answer = log.original_answer.map(ans => `${ans.type}&${ans.value}&${ans.geo ? ans.geo.country : ""}&${ans.ttl}`).join(',');
-            }
-            
-            return {
-                ...flattenObject(log),
-            }
-        })
-        
-        await lokiApi.push(logsFlatten);
+        const logsFlatten = await LogsEnrich(logs);
+        await Promise.all([
+            options.lokiUrl ? lokiApi.push(logsFlatten) : true,
+            options.httpUrl ? httpApi.push(logsFlatten) : true,
+        ])
+           
         return true;
     });
     lock = false;
