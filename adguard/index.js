@@ -1,6 +1,7 @@
 const axois = require('axios');
 const fs = require('fs');
 const logger = require('../logger');
+const path = require('path');
 const MAX_PAGES = 100;
 const CHUNK_SIZE = 500;
 
@@ -14,7 +15,7 @@ class AdguardApi {
         this.user = user;
         this.pass = pass;
         this.pointerFilePath = pointerFilePath;
-
+        fs.mkdirSync(path.dirname(pointerFilePath), { recursive: true });
         if(!fs.existsSync(pointerFilePath)) {
             fs.writeFileSync(this.pointerFilePath, "");
         }

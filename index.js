@@ -5,7 +5,8 @@ const logger = require('./logger');
 const AdguardApi = require('./adguard/index');
 const LokiApi = require('./outputs/loki');
 const HttpApi = require('./outputs/http');
-
+const express = require('express')
+const app = express()
 
 logger.info('--------  boot --------');
 logger.info(`log level: ${process.env.LOG_LEVEL}`);
@@ -17,7 +18,9 @@ program
   .option('-lurl --loki-url <char>', 'Loki url (http://127.0.0.1:3100)', process.env.LOKI_URL)
   .option('-hurl --http-url <char>', 'http url (http://127.0.0.1:12203)', process.env.HTTP_URL)
   .option('-tz --timezone <char>', 'Set timezone for message to loki', process.env.TIMEZONE)
-  .option('-cron --cron-schedule <char>', 'Corn Job schedule', process.env.CRON_SCHEDULE || '* * * * *');
+  .option('-cron --cron-schedule <char>', 'Corn Job schedule', process.env.CRON_SCHEDULE || '* * * * *')
+  .option('-port --api-port <char>', 'API Port', process.env.API_PORT || '8080')
+  .option('-p --pointer-path <char>', 'The pointer path', process.env.POINTER_PATH);
 
 program.parse();
 
@@ -59,7 +62,7 @@ if(options.lokiUrl && options.httpUrl) {
 }
 
 
-const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword);
+const adguardApi = new AdguardApi(options.adguardUrl, options.adguardUser, options.adguardPassword, options.pointerPath);
 const lokiApi = new LokiApi(options.lokiUrl, options.timezone);
 const httpApi = new HttpApi(options.httpUrl);
 let lock = false;
@@ -115,3 +118,12 @@ syncLogs();
 cron.schedule(options.cronSchedule, () => {
     syncLogs();
 });
+
+
+app.get('/health', (req, res) => {
+   res.status(200).send({'message':'OK'});
+})
+
+app.listen(options.apiPort, () => {
+    logger.info(`listening on port ${options.apiPort}`)
+})

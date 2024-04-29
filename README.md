@@ -27,8 +27,8 @@ services:
 
 ### Installation
 
-`yarn run build`
+`pnpm run build`
 
 ### run
 
-`yarn run -- -aurl http://127.0.0.1:8080 -auser admin -apass passwrod -lurl http://127.0.0.1:3100`
+`pnpm run start -aurl http://127.0.0.1:8080 -auser admin -apass passwrod -lurl http://127.0.0.1:3100`
