@@ -113,6 +113,14 @@ const syncLogs = async () => {
     lock = false;
 }
 
+app.get('/health', (req, res) => {
+    res.status(200).send({'message':'OK'});
+ })
+ 
+ app.listen(options.apiPort, "0.0.0.0", () => {
+     logger.info(`listening on port ${options.apiPort}`)
+ })
+ 
 syncLogs();
 
 cron.schedule(options.cronSchedule, () => {
@@ -120,11 +128,4 @@ cron.schedule(options.cronSchedule, () => {
 });
 
 
-app.get('/health', (req, res) => {
-   res.status(200).send({'message':'OK'});
-})
-
-app.listen(options.apiPort, "0.0.0.0", () => {
-    logger.info(`listening on port ${options.apiPort}`)
-})
 
