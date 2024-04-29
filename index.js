@@ -127,4 +127,3 @@ app.get('/health', (req, res) => {
 app.listen(options.apiPort, "0.0.0.0", () => {
     logger.info(`listening on port ${options.apiPort}`)
 })
-
